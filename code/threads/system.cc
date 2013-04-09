@@ -33,7 +33,7 @@ ProcessManager *pm;	// manager process
 MemoryManager *memManager;	// manager physical memory
 SysOpenFileManager* fileManager;	// manager SysOpenFile
 char diskBuffer[PageSize];
-
+VirtualMemoryManager *vmmanager;
 
 
 int userReadWrite(int virAddr, char* buffer, int size, int type) {
@@ -201,6 +201,9 @@ Initialize(int argc, char **argv)
 #ifdef NETWORK
     postOffice = new PostOffice(netname, rely, 10);
 #endif
+#ifdef USER_PROGRAM
+	vmmanager = new VirtualMemoryManager();
+#endif
 }
 
 //----------------------------------------------------------------------
@@ -219,6 +222,8 @@ Cleanup()
 	delete machine;
 	delete pm;
 	delete memManager;
+	delete fileManager;
+	delete vmmanager;
 #endif
 
 #ifdef FILESYS_NEEDED

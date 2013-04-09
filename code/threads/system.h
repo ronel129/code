@@ -38,7 +38,8 @@ extern Machine* machine;	// user program memory and registers
 extern ProcessManager* pm;	// manager process
 extern MemoryManager* memManager; // manager physical memory
 extern SysOpenFileManager* fileManager; // manager SysOpenFile
-extern char diskBuffer[PageSize]; // store read bytes from disk
+extern VirtualMemoryManager *vmmanager;
+extern char diskBuffer[PageSize];
 //int SpecialRead(int virAddr, char* buffer, int size);
 //int SpecialWrite(int virAddr, char* buffer, int size);
 #define USER_READ 0

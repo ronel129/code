@@ -430,7 +430,27 @@ void WriteHandler(int bufferAddr, int size, OpenFileId id) {
 	delete[] buffer;
 }
 
+//Project4-
+void PageFaultHandler() {
+	int faultAddr = machine->ReadRegister(BadVAddrReg);
+	vmmanager->ReplacePage(faultAddr);
+	printf("L %d: %d -> %d\n",currentThread->space->pcb->pid,faultAddr/PageSize,currentThread->space->GetTranslationEntry(faultAddr/PageSize)->physicalPage);
+}
 
+void ReadOnlyHandler(){
+	int faultAddr = machine->ReadRegister(BadVAddrReg);
+	vmmanager->ChangeRepresentee(currentThread->space,faultAddr);
+	TranslationEntry* entry = currentThread->space->GetTranslationEntry(faultAddr/PageSize);
+	printf("D %d: %d\n%",currentThread->space->pcb->pid,entry->diskLoc/PageSize);
+	entry->diskLoc = vmmanager->GetStoreLocation();
+	int oriPhyPage = entry->physicalPage;
+	vmmanager->BackStore(machine->mainMemory+entry->physicalPage*PageSize,PageSize,entry->diskLoc);
+	vmmanager->GetDiskPageInfo(entry->diskLoc/PageSize)->Add(entry);
+	entry->dirty = FALSE;
+	entry->readOnly = FALSE;
+	entry->valid = FALSE;
+	vmmanager->ReplacePage(faultAddr);
+}
 
 //----------------------------------------------------------------------
 // ExceptionHandler
@@ -528,7 +548,12 @@ ExceptionHandler(ExceptionType which)
 			printf("System call spefied not supported.\n");
 		}
 		AdjustPCRegs();
-    } else {
+    } 
+	else if (which == PageFaultException) {
+		PageFaultHandler();
+	} else if(which== ReadOnlyException){
+		ReadOnlyHandler();
+	else {
 	printf("Unexpected user mode exception %d %d\n", which, type);
 	ASSERT(FALSE);
     }

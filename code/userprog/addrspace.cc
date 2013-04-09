@@ -60,9 +60,10 @@ static void SwapHeader(NoffHeader *noffH) {
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-AddrSpace::AddrSpace(OpenFile *executable) {
+AddrSpace::AddrSpace(OpenFile *executable, PCB* pcb) 
+{
+	this->pcb = pcb;
 
-	Semaphore* addrLock = new Semaphore("addrLock",1);	
 	NoffHeader noffH;
 	unsigned int i, size;
 
@@ -78,53 +79,54 @@ AddrSpace::AddrSpace(OpenFile *executable) {
 	numPages = divRoundUp(size, PageSize);
 	size = numPages * PageSize;
 
-	addrLock->P();
-	if(numPages > memManager->GetClearPages()) {// check we're not trying
-		printf("Not enough memory.\n");
-		numPages = -1;
-		addrLock->V();
-		return;
-	}
 	// to run anything too big --
 	// at least until we have
 	// virtual memory
-
 	DEBUG('a', "Initializing address space, num pages %d, size %d\n", numPages,
 			size);
 	// first, set up the translation
 	pageTable = new TranslationEntry[numPages];
 	for (i = 0; i < numPages; i++) {
 		pageTable[i].virtualPage = i;
-		//use Memory maanager class.
-		//set pages allocated by memory manager for the physical page index
-		pageTable[i].physicalPage = memManager->GetPage();
+		//use pages allocated by your memory manager for the physical page index
+		pageTable[i].physicalPage = -1;
+		pageTable[i].diskLoc = vmmanager->GetStoreLocation();
+		char blank[PageSize];
+		bzero(blank,PageSize);
+		vmmanager->BackStore(blank,PageSize,pageTable[i].diskLoc);
 		// zero out the address space of physical page
 		// and the stack segment
-		bzero(machine->mainMemory + pageTable[i].physicalPage * PageSize,
-				PageSize);
-		pageTable[i].valid = TRUE;
+		pageTable[i].valid = FALSE;
 		pageTable[i].use = FALSE;
 		pageTable[i].dirty = FALSE;
 		pageTable[i].readOnly = FALSE; // if the code segment was entirely on
 		// a separate page, we could set its
 		// pages to be read-only
+		printf("z %d: %d\n",pcb->pid,pageTable[i].diskLoc/PageSize);
+		DiskPageInfo * info = vmmanager->GetDiskPageInfo(pageTable[i].diskLoc/PageSize);
+		pageTable[i].space = this;
+		info->Add(&pageTable[i]);
 	}
-	addrLock->V();
+
 	// then, copy in the code and data segments into memory
 	if (noffH.code.size > 0) {
 		DEBUG('a', "Initializing code segment, at 0x%x, size %d\n",
 				noffH.code.virtualAddr, noffH.code.size);
 		ReadFile(noffH.code.virtualAddr, executable, noffH.code.size,
 				noffH.code.inFileAddr);
+		//        executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
+		//			noffH.code.size, noffH.code.inFileAddr);
 	}
 	if (noffH.initData.size > 0) {
 		DEBUG('a', "Initializing data segment, at 0x%x, size %d\n",
 				noffH.initData.virtualAddr, noffH.initData.size);
 		ReadFile(noffH.initData.virtualAddr, executable, noffH.initData.size,
 				noffH.initData.inFileAddr);
-	
+		//        executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
+		//			noffH.initData.size, noffH.initData.inFileAddr);
 	}
-	printf("Loaded Program: %d code | %d data | %d bss\n",noffH.code.size,noffH.initData.size,noffH.uninitData.size);
+	printf("Loaded Program: %d code | %d data | %d bss\n", noffH.code.size,
+			noffH.initData.size, noffH.uninitData.size);
 }
 
 AddrSpace::AddrSpace() {
@@ -136,13 +138,11 @@ AddrSpace::AddrSpace() {
 //----------------------------------------------------------------------
 
 AddrSpace::~AddrSpace() {
-	if(this->Valid()){
-	for (int i = 0; i < numPages; i++) {
-		memManager->ClearPage(pageTable[i].physicalPage);
+	if (this->Valid()) {
+		vmmanager->ClearSpace(this);
+		delete [] pageTable;
+		delete pcb;
 	}
-
-	delete pageTable;
-	delete pcb;}
 }
 
 //----------------------------------------------------------------------
@@ -247,28 +247,25 @@ bool AddrSpace::Convert(int virtualAddr, int* physAddr) {
 
 int AddrSpace::ReadFile(int virtualAddr, OpenFile *file, int size, int fileAddr) {
 	
-	int bytesCopied=0;
-	int sizeAvailable, readSize;
-	char diskBuffer[size];	
-	int physAddr;	
-
-	int returnSize = file->ReadAt(diskBuffer, size, fileAddr);
-	size = returnSize;
-
-	//Reads the bytes from the file.	
-
-	while (size > 0 ) {
-		bool valid = Convert(virtualAddr, &physAddr);
-		ASSERT(valid==true);
-		sizeAvailable = PageSize - (physAddr) % PageSize;
-		readSize = min(size,sizeAvailable);
-		bcopy(diskBuffer+bytesCopied, &machine->mainMemory[physAddr], readSize);
-		
-		size -= readSize;
-		bytesCopied+= readSize;
-		virtualAddr += readSize;
+	char diskBuffer[size]; // store read bytes
+	int availSize;
+	// store the number of bytes actually read
+	int actualSize = file->ReadAt(diskBuffer, size, fileAddr);
+	size = actualSize;
+	int bytesCopied = 0;
+	int offset=0;
+	//read bytes in the "file"
+	while (size > 0) {
+		int pageNum = virtAddr / PageSize;
+		offset = virtAddr%PageSize;
+		availSize = min(PageSize,size);
+		vmmanager->BackStore(diskBuffer + bytesCopied, availSize,
+				pageTable[pageNum].diskLoc+offset);
+		size -= availSize;
+		bytesCopied += availSize;
+		virtAddr += availSize;
 	}
-	return returnSize;
+	return actualSize;
 }
 
 //----------------------------------------------------------------------
@@ -276,27 +273,27 @@ int AddrSpace::ReadFile(int virtualAddr, OpenFile *file, int size, int fileAddr)
 //	Create a new address space that is copy of the original.
 //----------------------------------------------------------------------
 
-AddrSpace* AddrSpace::Copy() {
+AddrSpace* AddrSpace::Copy(PCB *pcb) 
+{
 
-	if(numPages > memManager->GetClearPages()){
-		return NULL;
-	}
-	AddrSpace* Copy = new AddrSpace();
-	Copy->numPages = this->numPages;
-	Copy->pageTable = new TranslationEntry[numPages];
+	AddrSpace* clone = new AddrSpace();
+	clone->pcb = pcb;
+	clone->numPages = this->numPages;
+	clone->pageTable = new TranslationEntry[numPages];
 	for (int i = 0; i < numPages; i++) {
-		Copy->pageTable[i].virtualPage = i;
-		Copy->pageTable[i].physicalPage = memManager->GetPage();
-		Copy->pageTable[i].valid = this->pageTable[i].valid;
-		Copy->pageTable[i].use = this->pageTable[i].use;
-		Copy->pageTable[i].dirty = this->pageTable[i].dirty;
-
-		Copy->pageTable[i].readOnly = this->pageTable[i].readOnly;
-		bcopy(machine->mainMemory + this->pageTable[i].physicalPage * PageSize,
-				machine->mainMemory + Copy->pageTable[i].physicalPage
-						* PageSize, PageSize);
+		clone->pageTable[i].virtualPage = i;
+		clone->pageTable[i].physicalPage = this->pageTable[i].physicalPage;
+		clone->pageTable[i].valid = this->pageTable[i].valid;
+		clone->pageTable[i].use = this->pageTable[i].use;
+		clone->pageTable[i].dirty = this->pageTable[i].dirty;
+		clone->pageTable[i].diskLoc = this->pageTable[i].diskLoc;
+		clone->pageTable[i].readOnly = this->pageTable[i].readOnly = TRUE;
+		printf("Z %d: %d\n",clone->pcb->pid,pageTable[i].diskLoc/PageSize);
+		DiskPageInfo * info = vmmanager->GetDiskPageInfo(this->pageTable[i].diskLoc/PageSize);
+		info->Add(&clone->pageTable[i]);
+		clone->pageTable[i].space = clone;
 	}
-	return Copy;
+	return clone;
 }
 
 //----------------------------------------------------------------------
@@ -315,4 +312,15 @@ bool AddrSpace::Valid(){
 
 int AddrSpace::GetPages(){
 	return numPages;
+}
+
+TranslationEntry* AddrSpace::GetTranslationEntry(int pageNum) {
+	return &pageTable[pageNum];
+}
+
+int AddrSpace::GetTransEntryIndex(TranslationEntry* entry){
+	for(int i = 0;i < numPages;i++)
+		if(entry==pageTable+i)
+			return i;
+	return -1;
 }

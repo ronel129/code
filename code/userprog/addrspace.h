@@ -10,19 +10,19 @@
 // All rights reserved.  See copyright.h for copyright notice and limitation 
 // of liability and disclaimer of warranty provisions.
 
+
 #ifndef ADDRSPACE_H
 #define ADDRSPACE_H
 
 #include "copyright.h"
 #include "filesys.h"
-
 #define UserStackSize		1024 	// increase this as necessary!
 
 class PCB;
 class AddrSpace {
   public:
-    	AddrSpace(OpenFile *executable);	// Create an address space,
-	AddrSpace();
+    	AddrSpace(OpenFile *executable, PCB *pcb);	// Create an address space,
+		AddrSpace();
 					// initializing it with the program
 					// stored in the file "executable"
     	~AddrSpace();			// De-allocate an address space
@@ -32,13 +32,15 @@ class AddrSpace {
 
     	void SaveState();			// Save/restore address space-specific
     	void RestoreState();		// info on a context switch 
-	bool Convert(int virtAddr, int* physAddr); //converts a virtual address to a physical address
+		bool Convert(int virtAddr, int* physAddr); //converts a virtual address to a physical address
 	
-	int ReadFile(int virtAddr, OpenFile* file, int size,
-	int fileAddr);	// Load the code and data segments into the Convertd memory
-	bool Valid();	
-	AddrSpace* Copy();	// Create a new address space, an exact copy of the original
-	int GetPages();	
+		int ReadFile(int virtAddr, OpenFile* file, int size,
+						int fileAddr);	// Load the code and data segments into the Convertd memory
+		bool Valid();	
+		AddrSpace* Copy(PCB *pcb);	// Create a new address space, an exact copy of the original
+		int GetPages();	
+		TranslationEntry* GetTranslationEntry(int pageNum);
+		int GetTransEntryIndex(TranslationEntry* entry);
 
 public :
 	PCB *pcb;	// store information of the process control block (PCB)
