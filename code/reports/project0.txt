@@ -1,0 +1,32 @@
+We need 3 paragraphs for the following -
+a) Your experience installing Nachos w/ platform details
+b) your experience w/ the tests
+c) A description of the Thread class
+
+1 paragraph for each of the 3 requirements above, i figure we can use this google doc to work on all 3 topics above together then copy paste it VIM and upload to server per instructions. 
+
+Project Due Date - Monday, 21 Jan. 
+
+Project 0
+Jiovanni Alvarado - 2282973
+Ronel Manresa - 1414593
+Alexander Pita - 1297556
+
+Downloading the Nachos v3.4 source code and compiler was accomplished using wget and URL provided. 
+The file was downloaded to the current directory in the nachos server. 
+Next, nachos was compiled using the make command. 
+No issues were encountered with the environment variables and the compilation was successful. 
+
+The test programs were located at the specified directories and executed using ./nachos -x and 
+path of the halt program. The second test involved executing halt program with -s parameters,
+which steps through the execution in debugging mode. 
+Once finished, the output of the halt program printed statistics including number of ticks, 
+disk I/O reads/writes, console I/O read/writes, paging faults, and network I/O packages sent/received.  
+The halt program includes a method Halt() found in syscall.h which shutdowns the nachos operating system. 
+While executing in debug mode (-s parameters specified), the output displayed on the terminal showed each 
+of the machine registers including the program counter. 
+
+Finally, the Thread class was analyzed. The thread class includes very important method calls, including 
+the ability to initialize a thread control block, fork a process, finish processes once a thread is done 
+executing the forked procedure, sleep or relinquish CPU while waiting for a synchronization variable, 
+including Semaphore, lock or condition. 

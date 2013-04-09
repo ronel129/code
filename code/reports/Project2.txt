@@ -1,0 +1,177 @@
+Project Due Date - March, 21.
+
+Project 2
+Jiovanni Alvarado - 2282973
+Ronel Manresa - 1414593
+Alexander Pita - 1297556
+
+Our team successfully added to nachos the ability to perform the following system calls: Fork, Yield, Exit, Exec, Kill and Join. To test the implementation of each of the system calls we used simple user program test files which include one or more of the system calls.
+In order to implement this project, we created handler for each of the system calls. The exception handler of nachos would then determine which system call the process was trying to execute and call the corresponding handler. 
+Each handler was specific to the system call and would carry out the task as required in the specifications. The handlers would make use of a process manager class which includes data structures and methods to facility process management. 
+This class included the following properties and data structures: pcb status, pid, thread information, parent pid and an array of pcbs keeping track of each process that is added and removed in the address space. 
+Our team worked together to implement the system call functions and used regularly occurring meeting sessions to implement the solution. 
+
+Another class that was created in order facilitate implementing the system calls was the memory manager class. This class makes use of the bitmap.cc to manage memory operations on page tables including getting pages and clearing pages.  
+This is shown when the address space is being initialized. Instead of setting the physical page as a 1:1 mapping to the virtual page, we use the memory manager object to find the next available page and setting the physical page to the index that was returned.  
+In order to execute and test this project we have copied the provided user program test files to the test directory of nachos. To execute, first navigate to the userprog nachos directory and follow the inputs provided below. 
+
+1.Fork
+Input
+ - ./nachos -x ../test/fork
+
+Output
+
+Loaded Program: 576 code | 16 data | 0 bss
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 9 pages memory
+System Call: 1 invoked Exit
+Process 1 exits with 100
+System Call: 0 invoked Yield
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 9 pages memory
+System Call: 1 invoked Exit
+Process 1 exits with 100
+System Call: 0 invoked Yield
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 9 pages memory
+System Call: 1 invoked Exit
+Process 1 exits with 100
+System Call: 0 invoked Yield
+System Call: 0 invoked Exit
+Process 0 exits with 4
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+2.Yield
+Shown throughout the other test programs. Expected output is the System call: [pid] invoked Yield. 
+
+3.Exit
+Shown throughout the other test programs. Expected output is the System call: [pid] invoked Exit. Process [pi] exists with [status]
+
+4.Exec
+Input
+	./nachos -x ../test/exec
+Output
+Loaded Program: 400 code | 16 data | 0 bss
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 4 pages memory
+System Call: 1 invoked Exec
+Exec Program: 1 loading ../test/memory
+Loaded Program: 368 code | 0 data | 512 bss
+System Call: 1 invoked Exit
+Process 1 exits with 0
+System Call: 0 invoked Yield
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 4 pages memory
+System Call: 1 invoked Exec
+Exec Program: 1 loading ../test/memory
+Loaded Program: 368 code | 0 data | 512 bss
+System Call: 1 invoked Exit
+Process 1 exits with 0
+System Call: 0 invoked Yield
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 4 pages memory
+System Call: 1 invoked Exec
+Exec Program: 1 loading ../test/memory
+Loaded Program: 368 code | 0 data | 512 bss
+System Call: 1 invoked Exit
+Process 1 exits with 0
+System Call: 0 invoked Yield
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 4 pages memory
+System Call: 1 invoked Exec
+Exec Program: 1 loading ../test/memory
+Loaded Program: 368 code | 0 data | 512 bss
+System Call: 1 invoked Exit
+Process 1 exits with 0
+System Call: 0 invoked Yield
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 4 pages memory
+System Call: 1 invoked Exec
+Exec Program: 1 loading ../test/memory
+Loaded Program: 368 code | 0 data | 512 bss
+System Call: 1 invoked Exit
+Process 1 exits with 0
+System Call: 0 invoked Yield
+System Call: 0 invoked Exit
+Process 0 exits with 0
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+Ticks: total 631, idle 0, system 430, user 201
+Disk I/O: reads 0, writes 0
+Console I/O: reads 0, writes 0
+Paging: faults 0
+Network I/O: packets received 0, sent 0
+
+Note:
+
+For the test/exec.cc user program we were unable to clear the memory of the calling process. 
+When attempting to delete the address space we would get segmentation faults. The workaround we implemented was to lower the user stack size, defined in addrspace.h. 
+Other than this issue, we are loading the program properly and replacing the addrspace of the process, as required by the project specifications.
+
+5.Join
+Input
+
+./nachos -x ../test/join
+
+Output
+Loaded Program: 656 code | 16 data | 0 bss
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0x16C with 10 pages memory
+System Call: 1 invoked Exit
+Process 1 exits with 1
+System Call: 0 invoked Yield
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 10 pages memory
+System Call: 1 invoked Yield
+System Call: 0 invoked Yield
+System Call: 1 invoked Exit
+Process 1 exits with 102
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 10 pages memory
+System Call: 1 invoked Yield
+System Call: 0 invoked Yield
+System Call: 1 invoked Exit
+Process 1 exits with 103
+System Call: 0 invoked Join
+System Call: 0 invoked Join
+System Call: 0 invoked Join
+System Call: 0 invoked Exit
+Process 0 exits with 3
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+6. Kill
+Input
+./nachos -x ../test/kill
+
+Output
+Loaded Program: 384 code | 0 data | 0 bss
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 7 pages memory
+System Call: 1 invoked Yield
+System Call: 0 invoked Yield
+System Call: 1 invoked Yield
+System Call: 0 invoked Kill
+Process 0 killed process 1
+System Call: 0 invoked Exit
+Process 0 exits with 0
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+
+
+
+
+
+
+
+
+
+
+

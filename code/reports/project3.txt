@@ -1,0 +1,241 @@
+Project Due Date – April 4th, 2013.
+
+Project 3
+Jiovanni Alvarado - 2282973
+Ronel Manresa - 1414593
+Alexander Pita - 1297556
+
+
+Our team successfully added to nachos the ability to perform the following file system calls: Create, Open, Read, Write, and Close.
+This project relied heavily on the code for Project 2 and felt more like a continuation, rather than its own separate project. 
+Just like we did for Project 2, we added a handler for each of the required system calls in userprog/exception.cc. 
+Like in the previous project, the exception handler of nachos would then determine which system call the 
+process was trying to execute and call the corresponding handler. We added a ‘strcmp’ method that accepts two 
+char pointers for string comparison in ‘utilities.cc’. This method is utilized by methods in ‘userprog/sysopenfile.cc’.
+Sysopenfile.cc contains numerous file manipulation methods such as SysOpenFile::closeFile, SysOpenFile::closeAll, 
+SysOpenFileManager::Add, SysOpenFileManager::Get, and SysOpenFileManager::closeFile. 
+All system open files are kept in the ‘sysOpenFileObjects’ array. In ‘threads/system.cc’, we have a SpecialRead 
+and SpecialWrite methods. SpecialRead accepts a virtual address, buffer pointer, and buffer size and 
+writes the data read from an Open File into the buffer. The SpecialWrite method also takes a virtual address buffer pointer 
+and buffer size, and outputs the buffer data into an Open File. 
+
+In order to execute and test this project we have copied the TA provided user program test files ‘cp.c’, 
+‘concurrentRead.c’, and ‘in.dat’ to the test directory of nachos. 
+
+We had to change a line in cp.c from src = Open("in.dat"); to src = Open("../test/in.dat");
+
+To execute, first navigate to the userprog nachos directory and follow the inputs provided below. 
+
+1. CP
+
+Input
+../userprog/nachos -x ./cp
+
+Output
+
+Loaded Program: 688 code | 96 data | 0 bss
+System Call: 0 invoked Open
+cp: Input destination file name:
+
+System Call: 0 invoked Read
+./out.tmp
+System Call: 0 invoked Read
+System Call: 0 invoked Read
+System Call: 0 invoked Read
+System Call: 0 invoked Read
+System Call: 0 invoked Read
+System Call: 0 invoked Read
+System Call: 0 invoked Read
+System Call: 0 invoked Read
+System Call: 0 invoked Read
+System Call: 0 invoked Create
+System Call: 0 invoked Open
+System Call: 0 invoked Read
+System Call: 0 invoked Write
+System Call: 0 invoked Read
+System Call: 0 invoked Write
+System Call: 0 invoked Read
+System Call: 0 invoked Write
+System Call: 0 invoked Read
+System Call: 0 invoked Write
+System Call: 0 invoked Read
+System Call: 0 invoked Write
+System Call: 0 invoked Read
+cp: file in.dat is copied to file
+./out.tmp
+
+
+System Call: 0 invoked Close
+System Call: 0 invoked Close
+System Call: 0 invoked Exit
+Process 0 exits with 0
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+2. concurrentRead
+
+Input
+../userprog/nachos -x ./concurrentRead
+
+Output
+
+System Call: 0 invoked Fork
+Process 0 Fork 1: start at address 0xE0 with 14 pages memory
+System Call: 1 invoked Open
+System Call: 1 invoked Read
+##########fastRead:
+HE
+System Call: 1 invoked Yield
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+LL
+System Call: 1 invoked Yield
+System Call: 0 invoked Open
+System Call: 0 invoked Read
+slowRead:
+H
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+O
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+E
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+WO
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+L
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+LR
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+L
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+D!
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+O
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+
+
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+BY
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+W
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+E
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+O
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+WO
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+L
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+RL
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+R
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+##########fastRead:
+D
+System Call: 1 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+D
+System Call: 0 invoked Yield
+System Call: 1 invoked Read
+System Call: 1 invoked Close
+System Call: 1 invoked Exit
+Process 1 exits with 23
+System Call: 0 invoked Read
+slowRead:
+!
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+
+
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+B
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+Y
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+E
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+W
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+O
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+R
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+L
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+slowRead:
+D
+System Call: 0 invoked Yield
+System Call: 0 invoked Read
+System Call: 0 invoked Close
+System Call: 0 invoked Yield
+System Call: 0 invoked Exit
+Process 0 exits with 23
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!

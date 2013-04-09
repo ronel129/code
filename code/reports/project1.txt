@@ -1,0 +1,141 @@
+﻿Project Due Date - Saturday, 16 Feb.
+
+
+Project 1
+Jiovanni Alvarado - 2282973
+Ronel Manresa - 1414593
+Alexander Pita - 1297556
+
+
+Exercise 1 - Simple Threads Programming
+
+
+The Simple Threads Programming exercise was completed successfully. The nachos code function SimpleThread() was modified to update a shared variable inside a loop while multiple threads were forked based on the user input provided in the command prompt. Without any form of synchronization, the final output does not properly display the same final value for each thread. 
+
+
+Program without semaphores
+
+
+Input:
+bash-3.00$ export DEFINES="-DTHREADS -DCHANGED"; rm *.o; make; ./nachos -rs 43 -q 3
+
+
+Output:
+        …....
+*** thread 0 sees value 5
+*** thread 1 sees value 6
+Thread 2 sees final value 6
+Thread 0 sees final value 6
+Thread 1 sees final value 7
+
+
+Program with semaphores
+
+
+Input:
+bash-3.00$  export DEFINES="-DTHREADS -DCHANGED -DHW1_SEMAPHORES"; rm *.o; make; ./nachos -rs 43 -q 3
+
+
+Output:
+        …....
+*** thread 2 sees value 10
+*** thread 1 sees value 11
+*** thread 0 sees value 12
+*** thread 2 sees value 13
+*** thread 1 sees value 14
+Thread 1 sees final value 15
+Thread 0 sees final value 15
+Thread 2 sees final value 15
+
+
+Exercise 1 adds semaphores to the SimpleThread() code in order for each thread to update the shared variable and be mutually exclusive. In addition, a barrier (semaphore with initial value set to 0) was created so that the output is not printed until all the threads finish making their updates. These set of changes make the output of the code abide the requirements - Each iteration increments the variable by one and all threads see the same final value. 
+
+
+Exercise 2 - Implementing Locks 
+
+
+The locks operations were all implemented successfully. 
+
+
+Program with locks synchronization
+
+
+Input:
+bash-3.00$ export DEFINES="-DTHREADS -DCHANGED -DHW1_LOCKS"; rm *.o; make; ./nachos -rs 27 -q 4
+
+
+
+
+Output:
+        …....
+*** thread 2 sees value 18
+*** thread 3 sees value 19
+Thread 2 sees final value 20
+Thread 3 sees final value 20
+Thread 1 sees final value 20
+Thread 0 sees final value 20
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
+
+
+
+
+Exercise 2 uses the locks synchronization methods to keep the update of the shared variable properly synchronized. Similar to exercise 1 the barrier is implemented with logic based on the number of threads spawned versus the numbers of threads that have finished execution. 
+
+
+Exercise 3 - Implementing Conditions
+
+
+The conditions operations were all successfully implemented.
+
+
+Exercise 4 - Elevator
+
+
+The elevator exercise was successfully implemented. Two new files Elevator.cc and Elevator.h were created to meet the requirements. These two files were added to the Makefile.common in order to properly compile and run the project. 
+
+
+Input:
+export DEFINES="-DTHREADS -DCHANGED -DHW1_ELEVATOR"; rm *.o; make; ./nachos
+
+
+Elevator(5);
+            ArrivingGoingFromTo(1,2);
+            ArrivingGoingFromTo(2,5);
+            ArrivingGoingFromTo(3,4);        
+            ArrivingGoingFromTo(1,5);
+            ArrivingGoingFromTo(2,3);
+            ArrivingGoingFromTo(3,4);
+            ArrivingGoingFromTo(1,4);
+
+
+Output:
+        Person 1 wants to go to floor 2 from floor 1.
+Person 1 got into the elevator.
+Person 2 wants to go to floor 5 from floor 2.
+Person 3 wants to go to floor 4 from floor 3.
+Person 4 wants to go to floor 5 from floor 1.
+Person 4 got into the elevator.
+Person 5 wants to go to floor 3 from floor 2.
+Person 6 wants to go to floor 4 from floor 3.
+Person 7 wants to go to floor 4 from floor 1.
+Person 7 got into the elevator.
+Elevator arrives on floor 2.
+Person 1 got out of the elevator.
+Person 2 got into the elevator.
+Person 5 got into the elevator.
+Elevator arrives on floor 3.
+Person 3 got into the elevator.
+Person 5 got out of the elevator.
+Person 6 got into the elevator.
+Elevator arrives on floor 4.
+Person 3 got out of the elevator.
+Person 6 got out of the elevator.
+Person 7 got out of the elevator.
+Elevator arrives on floor 5.
+Person 2 got out of the elevator.
+Person 4 got out of the elevator.
+No threads ready or runnable, and no pending interrupts.
+Assuming the program completed.
+Machine halting!
